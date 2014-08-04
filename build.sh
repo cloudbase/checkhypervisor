@@ -1,2 +1,2 @@
-gcc -m32 -o checkhypervisor checkhypervisor.c
+gcc -m32 -static -o checkhypervisor checkhypervisor.c
 

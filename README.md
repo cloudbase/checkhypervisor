@@ -8,18 +8,26 @@ Utility to detect if the OS is running as a guest on a known hypervisor
 The following build command will generate a statically linked 32bit executable: 
 
     ./build.sh
-    
+
+## Windows build instructions
+
+The following build command will generate a statically linked executable: 
+
+    ./build.cmd
+
+Note: use the x86 Visual Studio toolchain to obtain a 32bit executable.
+
 ## Running
 
     ./checkhypervisor
     
 Returns the ID provided by the hypervisor, if present. For example:
 
-* Hyper-V
+* Hyper-V:
     **Microsoft Hv**
-* KVM
+* KVM:
     **KVMKVMKVM**
-* VMWare
+* VMWare:
     **VMwareVMware**
 
 ## Exit code

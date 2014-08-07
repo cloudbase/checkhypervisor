@@ -16,20 +16,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#ifdef _WIN32
+#include <intrin.h>
+#endif
 
-void get_cpuid(unsigned cpuid, unsigned* eax, unsigned* ebx, unsigned* ecx, unsigned* edx) 
+void get_cpuid(unsigned leaf, unsigned* regs)
 {
-    unsigned a = *eax;
-    unsigned b = *ebx;
-    unsigned c = *ecx;
-    unsigned d = *edx;
-
-    __asm__ __volatile__ ("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (cpuid));
-
-    *eax = a;
-    *ebx = b;
-    *ecx = c;
-    *edx = d;
+#ifdef _WIN32
+    __cpuid(regs, leaf);
+#else
+    __asm__ __volatile__ ("cpuid": "=a" (regs[0]), "=b" (regs[1]),
+                          "=c" (regs[2]), "=d" (regs[3]) : "a" (leaf));
+#endif
 }
 
 /*
@@ -38,25 +37,15 @@ VMWare specs: http://kb.vmware.com/selfservice/microsites/search.do?language=en_
 */
 int get_hypervisor_id(char* id)
 {
-    unsigned eax = 0;
-    unsigned ebx = 0;
-    unsigned ecx = 0;
-    unsigned edx = 0;
-    
+    unsigned regs[] = {0, 0, 0, 0};
     id[0] = 0;
 
-    get_cpuid(1, &eax, &ebx, &ecx, &edx);
-    if(ecx & (1 << 31))
+    get_cpuid(1, regs);
+    if(regs[2] & (1 << 31))
     {
-        eax = 0;
-        ebx = 0;
-        ecx = 0;
-        edx = 0;
-
-        get_cpuid(0x40000000, &eax, &ebx, &ecx, &edx);
-        *((unsigned*)id) = ebx;
-        *((unsigned*)id + 1) = ecx;
-        *((unsigned*)id + 2) = edx;
+        memset(regs, 0, sizeof(regs));
+        get_cpuid(0x40000000, regs);
+        memcpy(id, &regs[1], 12);
         id[12] = 0;
 
         return 1;
@@ -79,4 +68,3 @@ void main()
         exit(1);
     }
 }
-
